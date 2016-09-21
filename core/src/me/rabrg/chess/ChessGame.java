@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -27,6 +28,7 @@ public class ChessGame extends ApplicationAdapter implements InputProcessor {
 
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
+    private BitmapFont font;
     private Map<Short, TextureRegion> pieceTextureRegions;
 
     private Game game;
@@ -43,6 +45,8 @@ public class ChessGame extends ApplicationAdapter implements InputProcessor {
     private void setupRendering() {
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
+        font = new BitmapFont();
+        font.getData().setScale(4);
     }
 
     private void loadPieceTextureRegions() {
@@ -73,6 +77,7 @@ public class ChessGame extends ApplicationAdapter implements InputProcessor {
         clearScreen();
         drawBoard();
         drawPieces();
+        drawResult();
         play();
 	}
 
@@ -104,29 +109,52 @@ public class ChessGame extends ApplicationAdapter implements InputProcessor {
                     batch.draw(pieceTextureRegions.get(stone), column * STONE_SIZE, row * STONE_SIZE);
             }
         }
+    }
+
+    private void drawResult() {
+        if (game.getPosition().isStaleMate()) {
+            font.draw(batch, "Stale mate!", 50, 150);
+            System.out.println("stale mate!");
+        } else if (game.getPosition().isMate()) {
+            font.draw(batch, "Mate!", 150, 150);
+            System.out.println("mate!");
+        }
+//        } else if (game.getPosition().isCheck()) {
+//            font.draw(batch, "Check!", 150, 150);
+//            System.out.println("check!");
+//        }
         batch.end();
     }
 
-    final Player ai = new MinimaxPlayer(4);
+    final Player blackAi = new MinimaxPlayer(1, Chess.BLACK);
+    final Player whiteAi = new MinimaxPlayer(4, Chess.WHITE);
 
     private void play() {
-        if (from != -1 && to != -1 && game.getPosition().getToPlay() == Chess.WHITE) {
-            for (final short m : game.getPosition().getAllMoves()) {
-                if (Move.getToSqi(m) == to && Move.getFromSqi(m) == from) {
-                    try {
-                        game.getPosition().doMove(m);
-                    } catch (final IllegalMoveException e) {
-                        e.printStackTrace();
-                    }
+        if (!game.getPosition().isStaleMate() && !game.getPosition().isMate()) {
+            if (game.getPosition().getToPlay() == Chess.WHITE) {
+//        if (from != -1 && to != -1 && game.getPosition().getToPlay() == Chess.WHITE) {
+//            for (final short m : game.getPosition().getAllMoves()) {
+//                if (Move.getToSqi(m) == to && Move.getFromSqi(m) == from) {
+//                    try {
+//                        game.getPosition().doMove(m);
+//                    } catch (final IllegalMoveException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//            from = -1;
+//            to = -1;
+                try {
+                    game.getPosition().doMove(whiteAi.getMove(game.getPosition()));
+                } catch (final IllegalMoveException e) {
+                    e.printStackTrace();
                 }
-            }
-            from = -1;
-            to = -1;
-        } else if (game.getPosition().getToPlay() == Chess.BLACK) {
-            try {
-                game.getPosition().doMove(ai.getMove(game.getPosition()));
-            } catch (final IllegalMoveException e) {
-                e.printStackTrace();
+            } else if (game.getPosition().getToPlay() == Chess.BLACK) {
+                try {
+                    game.getPosition().doMove(blackAi.getMove(game.getPosition()));
+                } catch (final IllegalMoveException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

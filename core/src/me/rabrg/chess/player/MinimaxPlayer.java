@@ -1,14 +1,17 @@
 package me.rabrg.chess.player;
 
+import chesspresso.Chess;
 import chesspresso.move.IllegalMoveException;
 import chesspresso.position.Position;
 
 public final class MinimaxPlayer extends Player {
 
     private int depth;
+    private int player;
 
-    public MinimaxPlayer(final int depth) {
+    public MinimaxPlayer(final int depth, final int player) {
         this.depth = depth;
+        this.player = player;
     }
 
     public short getMove(final Position position) {
@@ -48,7 +51,9 @@ public final class MinimaxPlayer extends Player {
     private int utility(final Position position) {
         if (position.isStaleMate())
             return 0;
-        if (position.isMate()) // FIXME: always min; may be max
+        if (position.getToPlay() == player && (position.isCheck() || position.isMate())) // TODO: test
+            return Integer.MAX_VALUE;
+        if (position.getToPlay() != player && (position.isCheck() || position.isMate())) // TODO: test
             return Integer.MIN_VALUE;
         return (int) (position.getMaterial() + position.getDomination()); // TODO: play with value
     }
